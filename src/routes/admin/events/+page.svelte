@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { LIMITS } from '#lib/shared.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -39,6 +40,14 @@
 		<input name="date" type="date" use:closePickerOnPick required aria-label="Date" value={event?.date ?? ''} class="field" />
 		<input name="venue" required placeholder="Venue" aria-label="Venue" value={event?.venue ?? ''} class="field" />
 	</div>
+	<textarea
+		name="description"
+		rows="4"
+		maxlength={LIMITS.description.max}
+		placeholder="Description (optional, max {LIMITS.description.max} characters)"
+		aria-label="Description"
+		class="field">{event?.description ?? ''}</textarea
+	>
 {/snippet}
 
 <h1 class="mb-4 text-sm font-bold uppercase tracking-wide text-muted">Add event</h1>
@@ -73,6 +82,7 @@
 			{:else}
 				<p class="font-medium">{event.name}</p>
 				<p class="text-sm text-muted">{event.date} · {event.venue} · {event.artists}</p>
+				{#if event.description}<p class="mt-1 line-clamp-2 text-sm whitespace-pre-wrap">{event.description}</p>{/if}
 				<div class="mt-2 flex gap-2">
 					<button type="button" class="btn-ghost" onclick={() => (editingId = event.id)}>Edit</button>
 					<form

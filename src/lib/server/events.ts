@@ -4,7 +4,7 @@ import { slugify } from '#lib/shared.ts';
 import { db } from './db';
 import { comments, events } from './db/schema';
 
-export type EventInput = { name: string; artists: string; date: string; venue: string };
+export type EventInput = { name: string; artists: string; date: string; venue: string; description: string };
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
 
@@ -24,6 +24,7 @@ export async function listEvents(query = '', sort: Sort = 'date') {
 			artists: events.artists,
 			date: events.date,
 			venue: events.venue,
+			description: events.description,
 			score: events.score,
 			// Columns are written out because Drizzle drops table prefixes in single-table selects,
 			// which would make `id` resolve to comments.id inside the subquery.

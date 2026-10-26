@@ -1,6 +1,6 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '#lib/assets/favicon.png';
+	import favicon from '#lib/assets/favicon-white.png';
 	import SearchBar from '#lib/components/SearchBar.svelte';
 	import type { LayoutProps } from './$types';
 

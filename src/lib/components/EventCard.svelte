@@ -1,6 +1,7 @@
 <script lang="ts">
   import { formatDate } from "#lib/shared.ts";
   import { page } from "$app/state";
+  import favicon from "#lib/assets/favicon-white.png";
 
   type Props = {
     event: {
@@ -9,13 +10,19 @@
       artists: string;
       date: string;
       venue: string;
+      description?: string;
       score: number;
     };
     commentCount?: number;
     linked?: boolean;
     insideEventPage?: boolean;
   };
-  let { event, commentCount, linked = false, insideEventPage = false }: Props = $props();
+  let {
+    event,
+    commentCount,
+    linked = false,
+    insideEventPage = false,
+  }: Props = $props();
 
   const key = $derived(`vote:${event.slug}`);
   let scoreOverride = $state<number | null>(null);
@@ -69,7 +76,7 @@
 <article
   class="card relative px-3 pt-3 pb-2 {linked
     ? 'transition-colors hover:border-ink/40'
-    : ''} {insideEventPage ? 'hover:bg-black' : ''}"
+    : ''} {insideEventPage ? 'hover:bg-black border-t-0' : ''}"
 >
   <div class="flex items-center gap-2 text-xs text-muted">
     {#if insideEventPage}
@@ -92,10 +99,7 @@
         >
       </a>
     {/if}
-    <span
-      class="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm"
-      aria-hidden="true">🪸</span
-    >
+    <img src={favicon} alt="" class="flex size-5" aria-hidden="true" />
     <p>
       <span class="font-bold text-ink">r/reefberlin</span> · {formatDate(
         event.date,
@@ -112,9 +116,18 @@
     {/if}
   </h2>
   <p class="mt-1 text-sm text-muted">🎧 {event.artists}</p>
+  {#if event.description}
+    <p
+      class="mt-2 text-sm leading-relaxed break-words whitespace-pre-wrap {linked
+        ? 'line-clamp-4'
+        : ''}"
+    >
+      {event.description}
+    </p>
+  {/if}
 
   <div
-    class="relative z-[1] mt-3 flex flex-row flex-nowrap items-center gap-2 overflow-x-auto"
+    class="relative z-1 mt-3 flex flex-row flex-nowrap items-center gap-2 overflow-x-auto"
   >
     <span
       class="pill gap-0 {myVote === 1 ? 'bg-accent text-white' : ''} {myVote ===

@@ -1,7 +1,8 @@
 export const LIMITS = {
 	nickname: { min: 2, max: 24 },
 	codeword: { min: 4, max: 64 },
-	comment: { min: 1, max: 1000 }
+	comment: { min: 1, max: 1000 },
+	description: { max: 1000 }
 } as const;
 
 /** Emoji avatars a visitor can pick when they first claim a nickname. */

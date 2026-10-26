@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
+  import favicon from "#lib/assets/favicon-white.png";
 
   type Suggestion = {
     slug: string;
@@ -67,10 +68,12 @@
 </script>
 
 <form action="/" method="GET" role="search" class="relative flex-1">
-  <span
+  <img
+    src={favicon}
+    alt=""
     class="pointer-events-none absolute top-1/2 left-1 flex size-7 -translate-y-1/2 items-center justify-center rounded-full bg-accent text-sm"
-    aria-hidden="true">🪸</span
-  >
+    aria-hidden="true"
+  />
   <label class="sr-only" for="search">Search events</label>
   <input
     id="search"
