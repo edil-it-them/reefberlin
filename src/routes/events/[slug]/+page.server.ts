@@ -1,0 +1,47 @@
+import { error, fail } from '@sveltejs/kit';
+import { verifyCaptcha, PUBLIC_TURNSTILE_SITE_KEY } from '#lib/server/captcha.ts';
+import { addComment, getThreads, validateCommentFields } from '#lib/server/comments.ts';
+import { getEventBySlug } from '#lib/server/events.ts';
+import { ICONS } from '#lib/shared.ts';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ params }) => {
+	const event = await getEventBySlug(params.slug);
+	if (!event) error(404, 'Event not found');
+	return { event, threads: await getThreads(event.id), siteKey: PUBLIC_TURNSTILE_SITE_KEY };
+};
+
+export const actions: Actions = {
+	comment: async ({ request, params, getClientAddress }) => {
+		const data = await request.formData();
+		const text = (key: string) => String(data.get(key) ?? '').trim();
+
+		const rawParent = text('parentId');
+		const parentId = rawParent ? Number(rawParent) : null;
+		const values = { nickname: text('nickname'), icon: text('icon'), body: text('body') };
+		const reject = (message: string) => fail(400, { error: message, parentId, values });
+
+		const event = await getEventBySlug(params.slug);
+		if (!event) error(404, 'Event not found');
+
+		if (parentId !== null && !Number.isInteger(parentId)) return reject('Invalid reply target.');
+		const invalid = validateCommentFields({ ...values, codeword: String(data.get('codeword') ?? '') });
+		if (invalid) return reject(invalid);
+		if (!(ICONS as readonly string[]).includes(values.icon)) return reject('Pick an icon.');
+
+		if (!(await verifyCaptcha(text('cf-turnstile-response'), getClientAddress()))) {
+			return reject('Captcha failed. Please try again.');
+		}
+
+		const result = await addComment({
+			eventId: event.id,
+			parentId,
+			nickname: values.nickname,
+			codeword: String(data.get('codeword')),
+			icon: values.icon,
+			body: values.body
+		});
+		if (result.error) return reject(result.error);
+		return { success: true };
+	}
+};
