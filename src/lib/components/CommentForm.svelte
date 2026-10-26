@@ -115,7 +115,7 @@
 			<button type="button" class="btn bg-line text-ink hover:bg-muted/40" onclick={cancel}>
 				Cancel
 			</button>
-			<button class="btn bg-accent text-white hover:bg-[#0053ce]" disabled={submitting}>
+			<button class="btn bg-accent text-white hover:bg-accent/80" disabled={submitting}>
 				{parentId === null ? 'Comment' : 'Reply'}
 			</button>
 		</div>
