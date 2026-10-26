@@ -4,7 +4,7 @@
 @theme {
 	--color-canvas: #030303;
 	--color-card: #1a1a1b;
-	--color-card-hover: #272729;
+	--color-card-hover: #151516;
 	--color-line: #343536;
 	--color-ink: #d7dadc;
 	--color-muted: #818384;
@@ -12,6 +12,7 @@
 	--color-accent-hover: #ff5722;
 	--color-link: #4fbcff;
 	--color-field: #272729;
+	--color-bg-secondary: rgb(42, 50, 54);
 }
 
 @utility btn {
@@ -41,7 +42,16 @@
 	.btn-danger {
 		@apply btn border border-red-500/60 text-red-400 hover:bg-red-500/10;
 	}
+	.action {
+		@apply inline-flex cursor-pointer items-center gap-1 rounded-sm px-2 py-1.5 text-xs font-bold text-muted transition-colors hover:bg-card-hover;
+	}
+	.pill {
+		@apply inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-card-hover text-xs font-bold text-ink transition-colors;
+	}
+	.vote-btn {
+		@apply flex h-8 cursor-pointer items-center px-2 transition-colors;
+	}
 	.card {
-		@apply rounded-md border border-line bg-card;
+		@apply border-t  border-line hover:bg-card-hover;
 	}
 }

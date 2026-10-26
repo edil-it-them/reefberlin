@@ -9,7 +9,10 @@ export type EventInput = { name: string; artists: string; date: string; venue: s
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
 
 /** Events with their comment counts; optionally filtered by name, artists or venue. */
-export async function listEvents(query = '') {
+export const SORTS = ['date', 'oldest', 'rating', 'comments'] as const;
+export type Sort = (typeof SORTS)[number];
+
+export async function listEvents(query = '', sort: Sort = 'date') {
 	const q = query.trim();
 	const pattern = `%${escapeLike(q)}%`;
 	const match = (col: SQLiteColumn) => sql`${col} like ${pattern} escape '\\'`;
@@ -21,14 +24,34 @@ export async function listEvents(query = '') {
 			artists: events.artists,
 			date: events.date,
 			venue: events.venue,
+			score: events.score,
 			// Columns are written out because Drizzle drops table prefixes in single-table selects,
 			// which would make `id` resolve to comments.id inside the subquery.
 			commentCount: sql<number>`(select count(*) from comments c where c.event_id = events.id)`
 		})
 		.from(events)
 		.where(q ? or(match(events.name), match(events.artists), match(events.venue)) : undefined)
-		.orderBy(desc(events.date))
+		.orderBy(
+			...(sort === 'rating'
+				? [desc(events.score), desc(events.date)]
+				: sort === 'comments'
+					? [sql`(select count(*) from comments c where c.event_id = events.id) desc`, desc(events.date)]
+					: sort === 'oldest'
+					? [asc(events.date)]
+					: [desc(events.date)])
+		)
 		.limit(100);
+}
+
+/** Applies a vote delta (clamped to -2..2, enough to flip a vote) and returns the new score. */
+export async function applyVote(slug: string, delta: number) {
+	const d = Math.max(-2, Math.min(2, Math.trunc(delta)));
+	const [row] = await db
+		.update(events)
+		.set({ score: sql`${events.score} + ${d}` })
+		.where(eq(events.slug, slug))
+		.returning({ score: events.score });
+	return row?.score ?? null;
 }
 
 export const getEventBySlug = (slug: string) =>

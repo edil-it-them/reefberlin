@@ -14,6 +14,8 @@ export const events = sqliteTable('events', {
 	/** ISO date, YYYY-MM-DD */
 	date: text('date').notNull(),
 	venue: text('venue').notNull(),
+	/** Net upvotes minus downvotes. */
+	score: integer('score').notNull().default(0),
 	createdAt: createdAt()
 });
 
