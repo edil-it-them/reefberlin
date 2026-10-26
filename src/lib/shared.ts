@@ -5,7 +5,7 @@ export const LIMITS = {
 } as const;
 
 /** Emoji avatars a visitor can pick when they first claim a nickname. */
-export const ICONS = ['🐙', '🦑', '🐠', '🐡', '🦈', '🐢', '🦀', '🪸', '🐚', '🐬', '🦞', '🎧'] as const;
+export const ICONS = ['🐙', '🦑', '🐠', '🐡', '🦈', '🐢', '🦀', '🪸', '🐚', '🐬', '🦞'] as const;
 
 export const NICKNAME_PATTERN = /^[\p{L}\p{N}_.\- ]+$/u;
 
