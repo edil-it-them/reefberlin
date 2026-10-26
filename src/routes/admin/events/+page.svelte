@@ -4,6 +4,30 @@
 
 	let { data, form }: PageProps = $props();
 	let editingId: number | null = $state(null);
+
+	/** Safari keeps the native date popover open after a pick; blur closes it.
+	 * Typed edits (keyboard) are left alone so segment entry isn't interrupted. */
+	function closePickerOnPick(node: HTMLInputElement) {
+		let typed = false;
+		const onKeydown = (e: KeyboardEvent) => {
+			if (e.key !== 'Tab' && e.key !== 'Escape') typed = true;
+		};
+		const onChange = () => {
+			if (!typed && node.value) node.blur();
+			typed = false;
+		};
+		const onBlur = () => (typed = false);
+		node.addEventListener('keydown', onKeydown);
+		node.addEventListener('change', onChange);
+		node.addEventListener('blur', onBlur);
+		return {
+			destroy() {
+				node.removeEventListener('keydown', onKeydown);
+				node.removeEventListener('change', onChange);
+				node.removeEventListener('blur', onBlur);
+			}
+		};
+	}
 </script>
 
 <svelte:head><title>Admin · Events</title></svelte:head>
@@ -12,7 +36,7 @@
 	<input name="name" required placeholder="Event name" aria-label="Event name" value={event?.name ?? ''} class="field" />
 	<input name="artists" required placeholder="Artists (comma separated)" aria-label="Artists" value={event?.artists ?? ''} class="field" />
 	<div class="grid grid-cols-2 gap-2">
-		<input name="date" type="date" required aria-label="Date" value={event?.date ?? ''} class="field" />
+		<input name="date" type="date" use:closePickerOnPick required aria-label="Date" value={event?.date ?? ''} class="field" />
 		<input name="venue" required placeholder="Venue" aria-label="Venue" value={event?.venue ?? ''} class="field" />
 	</div>
 {/snippet}
