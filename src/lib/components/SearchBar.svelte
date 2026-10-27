@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { page } from "$app/state";
-  import { goto } from "$app/navigation";
+    import { goto } from "$app/navigation";
   import favicon from "#lib/assets/favicon-white.png";
 
   type Suggestion = {
@@ -11,19 +10,12 @@
     date: string;
   };
 
-  const initial = $derived(
-    page.url.pathname === "/" ? (page.url.searchParams.get("q") ?? "") : "",
-  );
   let text = $state("");
   let suggestions = $state<Suggestion[]>([]);
   let open = $state(false);
   let active = $state(-1);
   let timer: ReturnType<typeof setTimeout>;
   let seq = 0;
-
-  $effect(() => {
-    text = initial;
-  });
 
   function onInput() {
     clearTimeout(timer);
@@ -47,8 +39,26 @@
     }, 150);
   }
 
-  function choose(s: Suggestion) {
+  function reset() {
+    clearTimeout(timer);
+    seq++;
+    text = "";
+    suggestions = [];
     open = false;
+    active = -1;
+  }
+
+  function onSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    const q = text.trim();
+    if (!q) return;
+    (document.activeElement as HTMLElement | null)?.blur();
+    reset();
+    goto(`/?q=${encodeURIComponent(q)}`);
+  }
+
+  function choose(s: Suggestion) {
+    reset();
     goto(`/events/${s.slug}`);
   }
 
@@ -67,7 +77,13 @@
   }
 </script>
 
-<form action="/" method="GET" role="search" class="relative flex-1">
+<form
+  action="/"
+  method="GET"
+  role="search"
+  class="relative flex-1"
+  onsubmit={onSubmit}
+>
   <img
     src={favicon}
     alt=""
