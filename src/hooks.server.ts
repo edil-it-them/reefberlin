@@ -13,6 +13,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
-	if (isAdminArea) response.headers.set('cache-control', 'no-store');
+	if (isAdminArea) {
+		response.headers.set('cache-control', 'no-store');
+		response.headers.set('x-robots-tag', 'noindex, nofollow');
+	}
 	return response;
 };

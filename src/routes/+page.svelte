@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Seo from "#lib/components/Seo.svelte";
   import EventCard from "#lib/components/EventCard.svelte";
   import { fly } from "svelte/transition";
   import type { PageProps } from "./$types";
@@ -32,9 +33,17 @@
   }
 </script>
 
-<svelte:head>
-  <title>Reef Berlin Guestbook</title>
-</svelte:head>
+<Seo
+  title="Reef Berlin"
+  description="Reef Berlin Guestbook."
+  path="/"
+  noindex={!!data.query}
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Reef Berlin Guestbook",
+  }}
+/>
 {#if data.query}
   <h1 class="mb-4 text-sm text-muted">
     {data.events.length} result{data.events.length === 1 ? "" : "s"} for
