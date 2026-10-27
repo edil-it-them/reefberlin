@@ -11,6 +11,10 @@
       date: string;
       venue: string;
       description?: string;
+      hasPoster?: boolean;
+      posterWidth?: number | null;
+      posterHeight?: number | null;
+      posterVersion?: string | null;
       score: number;
     };
     commentCount?: number;
@@ -124,6 +128,17 @@
     >
       {event.description}
     </p>
+  {/if}
+  {#if event.hasPoster}
+    <img
+      src="/events/{event.slug}/poster?v={event.posterVersion}"
+      alt="Poster for {event.name}"
+      width={event.posterWidth ?? undefined}
+      height={event.posterHeight ?? undefined}
+      loading={insideEventPage ? "eager" : "lazy"}
+      decoding="async"
+      class="mt-3 max-h-[60vh] w-full rounded-xl bg-black/20 object-contain object-center"
+    />
   {/if}
 
   <div

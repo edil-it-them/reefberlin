@@ -48,10 +48,39 @@
 		aria-label="Description"
 		class="field">{event?.description ?? ''}</textarea
 	>
+	<div class="flex flex-col gap-2">
+		<label for="poster-{event?.id ?? 'new'}" class="text-sm font-medium">Event poster (optional)</label>
+		<input
+			id="poster-{event?.id ?? 'new'}"
+			name="poster"
+			type="file"
+			accept="image/png,image/jpeg"
+			aria-describedby="poster-help-{event?.id ?? 'new'}"
+			class="field"
+		/>
+		<p id="poster-help-{event?.id ?? 'new'}" class="text-xs text-muted">
+			PNG or JPEG, up to 3 MB. Posters are automatically resized and optimized for the web.
+		</p>
+		{#if event?.hasPoster}
+			<img
+				src="/events/{event.slug}/poster?v={event.posterVersion}"
+				alt="Current poster for {event.name}"
+				width={event.posterWidth ?? undefined}
+				height={event.posterHeight ?? undefined}
+				loading="lazy"
+				decoding="async"
+				class="max-h-64 w-fit rounded-lg object-contain"
+			/>
+			<label class="flex items-center gap-2 text-sm text-muted">
+				<input name="removePoster" type="checkbox" value="true" />
+				Remove current poster (unless uploading a replacement)
+			</label>
+		{/if}
+	</div>
 {/snippet}
 
 <h1 class="mb-4 text-sm font-bold uppercase tracking-wide text-muted">Add event</h1>
-<form method="POST" action="?/create" use:enhance class="card mb-8 flex flex-col gap-2 p-4">
+<form method="POST" action="?/create" enctype="multipart/form-data" use:enhance class="card mb-8 flex flex-col gap-2 p-4">
 	{@render fields()}
 	{#if form?.error && form.id === null}<p role="alert" class="text-sm text-red-400">{form.error}</p>{/if}
 	<div><button class="btn-primary">Add</button></div>
@@ -65,6 +94,7 @@
 				<form
 					method="POST"
 					action="?/update"
+					enctype="multipart/form-data"
 					class="flex flex-col gap-2"
 					use:enhance={() => async ({ result, update }) => {
 						await update({ reset: false });
@@ -83,6 +113,17 @@
 				<p class="font-medium">{event.name}</p>
 				<p class="text-sm text-muted">{event.date} · {event.venue} · {event.artists}</p>
 				{#if event.description}<p class="mt-1 line-clamp-2 text-sm whitespace-pre-wrap">{event.description}</p>{/if}
+				{#if event.hasPoster}
+					<img
+						src="/events/{event.slug}/poster?v={event.posterVersion}"
+						alt="Poster for {event.name}"
+						width={event.posterWidth ?? undefined}
+						height={event.posterHeight ?? undefined}
+						loading="lazy"
+						decoding="async"
+						class="mt-2 max-h-40 w-fit rounded-lg object-contain"
+					/>
+				{/if}
 				<div class="mt-2 flex gap-2">
 					<button type="button" class="btn-ghost" onclick={() => (editingId = event.id)}>Edit</button>
 					<form

@@ -5,6 +5,7 @@ Anonymous guestbook for events. SvelteKit 3 + Tailwind 4 + Drizzle (libSQL/SQLit
 ## Features
 - Home: event list with comment counts, top-bar search (name / artists / venue).
 - Event page: comments and replies (one level only), protected by Cloudflare Turnstile.
+- Admin event editor: optional PNG/JPEG posters, resized and converted to WebP (up to 1200×1800 and 500 KB) before storage in Turso.
 - No accounts: a visitor claims a **nickname + codeword** on first post (stored hashed). The same pair is required to reuse the nickname.
 - `/admin`: edit/delete comments, manage events, change password.
 
@@ -31,6 +32,7 @@ The `.env.example` Turnstile keys are Cloudflare's test keys (always pass).
 
 ## Deploy to Vercel
 1. Create a [Turso](https://turso.tech) database (Vercel's filesystem is read-only, so a local file won't work). Run `DATABASE_URL=libsql://... DATABASE_AUTH_TOKEN=... npm run db:push`.
+   For an existing database, run the same command after schema changes and before deploying; event posters use new nullable columns.
 2. Create a Turnstile widget at Cloudflare.
 3. Set these env vars in Vercel: `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `ADMIN_PASSWORD`, `SESSION_SECRET`, `PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`.
 

@@ -1,13 +1,19 @@
 import { error, fail } from '@sveltejs/kit';
 import { verifyCaptcha, PUBLIC_TURNSTILE_SITE_KEY } from '#lib/server/captcha.ts';
 import { addComment, getThreads, validateCommentFields } from '#lib/server/comments.ts';
+import { EDGE_CACHE } from '#lib/server/cache.ts';
 import { getEventBySlug } from '#lib/server/events.ts';
 import { ICONS } from '#lib/shared.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, setHeaders, isDataRequest }) => {
 	const event = await getEventBySlug(params.slug);
 	if (!event) error(404, 'Event not found');
+	// Only full page loads are edge-cached; client-side data refetches (e.g. after posting a
+	// comment) must be fresh so users see their own comment immediately.
+	if (!isDataRequest) {
+		setHeaders(EDGE_CACHE);
+	}
 	return { event, threads: await getThreads(event.id), siteKey: PUBLIC_TURNSTILE_SITE_KEY };
 };
 

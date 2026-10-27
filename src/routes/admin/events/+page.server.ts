@@ -6,6 +6,7 @@ import {
 	updateEvent,
 	type EventInput
 } from '#lib/server/events.ts';
+import { processPoster } from '#lib/server/posters.ts';
 import { LIMITS } from '#lib/shared.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -30,9 +31,12 @@ function parseEvent(data: FormData): EventInput | null {
 
 export const actions: Actions = {
 	create: async ({ request }) => {
-		const event = parseEvent(await request.formData());
+		const data = await request.formData();
+		const event = parseEvent(data);
 		if (!event) return fail(400, { error: 'Fill in all required fields (description max 1000 characters).', id: null });
-		await createEvent(event);
+		const result = await processPoster(data.get('poster'));
+		if (result.error) return fail(400, { error: result.error, id: null });
+		await createEvent(event, result.poster);
 		return { success: true };
 	},
 
@@ -41,7 +45,10 @@ export const actions: Actions = {
 		const id = Number(data.get('id'));
 		const event = parseEvent(data);
 		if (!Number.isInteger(id) || !event) return fail(400, { error: 'Fill in all required fields (description max 1000 characters).', id });
-		await updateEvent(id, event);
+		const result = await processPoster(data.get('poster'));
+		if (result.error) return fail(400, { error: result.error, id });
+		const removePoster = data.get('removePoster') === 'true';
+		await updateEvent(id, event, result.poster ?? (removePoster ? null : undefined));
 		return { success: true };
 	},
 

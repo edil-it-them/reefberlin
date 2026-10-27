@@ -2,7 +2,8 @@ import { json } from '@sveltejs/kit';
 import { listEvents } from '#lib/server/events.ts';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, setHeaders }) => {
+	setHeaders({ 'cache-control': 'public, max-age=30', 'vercel-cdn-cache-control': 's-maxage=60, stale-while-revalidate=300' });
 	const q = (url.searchParams.get('q') ?? '').trim().slice(0, 100);
 	if (!q) return json([]);
 	const rows = await listEvents(q);

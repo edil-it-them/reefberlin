@@ -82,15 +82,15 @@
     bind:value={text}
     oninput={onInput}
     onkeydown={onKeydown}
-    onfocus={() => (open = suggestions.length > 0)}
+    onfocus={() => (open = suggestions.length > 0 && text.trim() !== "")}
     onblur={() => setTimeout(() => (open = false), 100)}
-    placeholder="Search reefit"
+    placeholder="Search Reef-it"
     autocomplete="off"
     role="combobox"
     aria-expanded={open}
     aria-controls="search-suggestions"
     aria-autocomplete="list"
-    class="field rounded-full bg-bg-secondary py-1.5 pl-10 placeholder:text-center"
+    class="field rounded-full bg-bg-secondary py-1.5 pl-10 pr-10 placeholder:text-center"
   />
   {#if open}
     <ul

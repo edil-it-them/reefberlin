@@ -3,6 +3,7 @@ import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { slugify } from '#lib/shared.ts';
 import { db } from './db';
 import { comments, events } from './db/schema';
+import type { EventPoster } from './posters';
 
 export type EventInput = { name: string; artists: string; date: string; venue: string; description: string };
 
@@ -25,6 +26,11 @@ export async function listEvents(query = '', sort: Sort = 'date') {
 			date: events.date,
 			venue: events.venue,
 			description: events.description,
+			posterWidth: events.posterWidth,
+			posterHeight: events.posterHeight,
+			hasPoster: sql<boolean>`${events.poster} is not null`,
+			// Cache-busting token: changes whenever the poster bytes change.
+			posterVersion: sql<string | null>`case when ${events.poster} is null then null else length(${events.poster}) || hex(substr(${events.poster}, -8)) end`,
 			score: events.score,
 			// Columns are written out because Drizzle drops table prefixes in single-table selects,
 			// which would make `id` resolve to comments.id inside the subquery.
@@ -56,12 +62,47 @@ export async function applyVote(slug: string, delta: number) {
 }
 
 export const getEventBySlug = (slug: string) =>
-	db.query.events.findFirst({ where: eq(events.slug, slug) });
+	db
+		.select({
+			id: events.id,
+			slug: events.slug,
+			name: events.name,
+			artists: events.artists,
+			date: events.date,
+			venue: events.venue,
+			description: events.description,
+			posterWidth: events.posterWidth,
+			posterHeight: events.posterHeight,
+			hasPoster: sql<boolean>`${events.poster} is not null`,
+			// Cache-busting token: changes whenever the poster bytes change.
+			posterVersion: sql<string | null>`case when ${events.poster} is null then null else length(${events.poster}) || hex(substr(${events.poster}, -8)) end`,
+			score: events.score
+		})
+		.from(events)
+		.where(eq(events.slug, slug))
+		.get();
 
 export const getEventById = (id: number) =>
 	db.query.events.findFirst({ where: eq(events.id, id) });
 
-export const listEventsForAdmin = () => db.select().from(events).orderBy(asc(events.name));
+export const listEventsForAdmin = () =>
+	db
+		.select({
+			id: events.id,
+			slug: events.slug,
+			name: events.name,
+			artists: events.artists,
+			date: events.date,
+			venue: events.venue,
+			description: events.description,
+			posterWidth: events.posterWidth,
+			posterHeight: events.posterHeight,
+			hasPoster: sql<boolean>`${events.poster} is not null`,
+			// Cache-busting token: changes whenever the poster bytes change.
+			posterVersion: sql<string | null>`case when ${events.poster} is null then null else length(${events.poster}) || hex(substr(${events.poster}, -8)) end`
+		})
+		.from(events)
+		.orderBy(asc(events.name));
 
 async function uniqueSlug(name: string, ignoreId?: number): Promise<string> {
 	const base = slugify(name) || 'event';
@@ -72,13 +113,31 @@ async function uniqueSlug(name: string, ignoreId?: number): Promise<string> {
 	}
 }
 
-export async function createEvent(input: EventInput) {
-	await db.insert(events).values({ ...input, slug: await uniqueSlug(input.name) });
+export async function createEvent(input: EventInput, poster: EventPoster | null) {
+	await db
+		.insert(events)
+		.values({
+			...input,
+			slug: await uniqueSlug(input.name),
+			...(poster
+				? { poster: poster.data, posterWidth: poster.width, posterHeight: poster.height }
+				: {})
+		});
 }
 
 /** Slug is kept stable on edit so shared links don't break. */
-export async function updateEvent(id: number, input: EventInput) {
-	await db.update(events).set(input).where(eq(events.id, id));
+export async function updateEvent(id: number, input: EventInput, poster?: EventPoster | null) {
+	await db
+		.update(events)
+		.set({
+			...input,
+			...(poster === undefined
+				? {}
+				: poster
+					? { poster: poster.data, posterWidth: poster.width, posterHeight: poster.height }
+					: { poster: null, posterWidth: null, posterHeight: null })
+		})
+		.where(eq(events.id, id));
 }
 
 export async function deleteEvent(id: number) {

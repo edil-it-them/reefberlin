@@ -1,5 +1,12 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, type AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
+import {
+	blob,
+	index,
+	integer,
+	sqliteTable,
+	text,
+	type AnySQLiteColumn
+} from 'drizzle-orm/sqlite-core';
 
 const createdAt = () =>
 	integer('created_at', { mode: 'timestamp' })
@@ -15,6 +22,9 @@ export const events = sqliteTable('events', {
 	date: text('date').notNull(),
 	venue: text('venue').notNull(),
 	description: text('description').notNull().default(''),
+	poster: blob('poster', { mode: 'buffer' }),
+	posterWidth: integer('poster_width'),
+	posterHeight: integer('poster_height'),
 	/** Net upvotes minus downvotes. */
 	score: integer('score').notNull().default(0),
 	createdAt: createdAt()
