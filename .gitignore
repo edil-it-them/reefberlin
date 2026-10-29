@@ -40,3 +40,6 @@ yarn-debug.log*
 pnpm-debug.log*
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Database dumps contain password and codeword hashes
+*.sql
