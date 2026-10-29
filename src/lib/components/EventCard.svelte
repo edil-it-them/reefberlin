@@ -161,7 +161,7 @@
       height={event.posterHeight ?? undefined}
       loading={insideEventPage ? "eager" : "lazy"}
       decoding="async"
-      class="mt-3 max-h-[70vh] w-full rounded-xl bg-black/20 object-contain object-center"
+      class="mt-3 max-h-[75vh] w-full rounded-xl bg-black/20 object-contain object-center"
     />
   {/if}
 
