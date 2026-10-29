@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, like, ne, or, sql } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { slugify } from '#lib/shared.ts';
+import { eventSlugBase } from '#lib/shared.ts';
 import { db } from './db';
 import { comments, events } from './db/schema';
 import type { EventPoster } from './posters';
@@ -114,10 +114,6 @@ export const listEventsForAdmin = () =>
 		})
 		.from(events)
 		.orderBy(desc(events.pinned), asc(events.name));
-
-/** Event slugs are name + date (reef-night-2026-03-14); the pinned post has no date. */
-export const eventSlugBase = (name: string, date: string, pinned = false) =>
-	[slugify(name) || 'event', pinned ? '' : date].filter(Boolean).join('-');
 
 async function uniqueSlug(base: string, ignoreId?: number): Promise<string> {
 	for (let i = 0; ; i++) {

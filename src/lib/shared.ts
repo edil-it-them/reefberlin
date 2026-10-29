@@ -93,3 +93,7 @@ export const DEFAULT_SITE: SiteContent = {
 		{ title: 'Memories only', body: 'Stick to your memories of the night: no ads or spam.' }
 	]
 };
+
+/** Event slugs are name + date (reef-night-2026-03-14); the pinned post has no date. */
+export const eventSlugBase = (name: string, date: string, pinned = false) =>
+	[slugify(name) || 'event', pinned ? '' : date].filter(Boolean).join('-');

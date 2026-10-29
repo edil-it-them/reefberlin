@@ -9,6 +9,7 @@
 		"preview": "vite preview",
 		"db:push": "drizzle-kit push",
 		"db:seed": "tsx --env-file=.env scripts/seed.ts",
+		"import:events": "tsx --env-file=.env scripts/import-events.ts",
 		"admin:reset": "tsx --env-file=.env scripts/admin-reset.ts",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
