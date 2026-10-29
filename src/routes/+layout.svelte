@@ -2,6 +2,7 @@
 	import './layout.css';
 	import favicon from '#lib/assets/favicon-white.png';
 	import SearchBar from '#lib/components/SearchBar.svelte';
+	import { page } from '$app/state';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -21,6 +22,6 @@
 	</div>
 </header>
 
-<main class="mx-auto max-w-3xl px-4 py-6">
+<main class="mx-auto px-4 py-6 {page.route.id === '/' ? 'max-w-6xl' : 'max-w-3xl'}">
 	{@render children()}
 </main>

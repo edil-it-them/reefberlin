@@ -27,6 +27,12 @@ export const events = sqliteTable('events', {
 	posterHeight: integer('poster_height'),
 	/** Net upvotes minus downvotes. */
 	score: integer('score').notNull().default(0),
+	/** At most one event is pinned: it is text-only, has closed comments and always sorts first. */
+	pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
+	/** When true the post shows no vote buttons and the vote API rejects votes. */
+	votingDisabled: integer('voting_disabled', { mode: 'boolean' }).notNull().default(false),
+	/** When true the card hides its Share button. */
+	sharingDisabled: integer('sharing_disabled', { mode: 'boolean' }).notNull().default(false),
 	createdAt: createdAt()
 });
 

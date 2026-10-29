@@ -1,6 +1,10 @@
 <script lang="ts">
   import Seo from "#lib/components/Seo.svelte";
   import EventCard from "#lib/components/EventCard.svelte";
+  import CommunityHeader from "#lib/components/CommunityHeader.svelte";
+  import SortNav from "#lib/components/SortNav.svelte";
+  import AboutPanel from "#lib/components/AboutPanel.svelte";
+  import RulesCard from "#lib/components/RulesCard.svelte";
   import { fly } from "svelte/transition";
   import type { PageProps } from "./$types";
   import { cubicOut } from "svelte/easing";
@@ -12,17 +16,23 @@
   });
   let { data }: PageProps = $props();
 
-  const OPTIONS = [
+  // const OPTIONS = [
+  //   { value: "date", label: "Newest" },
+  //   { value: "oldest", label: "Oldest" },
+  //   { value: "rating", label: "Top rated" },
+  //   { value: "comments", label: "Most comments" },
+  // ] as const;
+
+  const MENU = [
     { value: "date", label: "Newest" },
-    { value: "oldest", label: "Oldest" },
-    { value: "rating", label: "Top rated" },
-    { value: "comments", label: "Most comments" },
-  ] as const;
+    { value: "rating", label: "Top Rated" },
+    { value: "comments", label: "Top Memories" },
+  ];
 
   let open = $state(false);
-  const current = $derived(
-    OPTIONS.find((o) => o.value === data.sort) ?? OPTIONS[0],
-  );
+  // const current = $derived(
+  //   OPTIONS.find((o) => o.value === data.sort) ?? OPTIONS[0],
+  // );
 
   function href(sort: string) {
     const p = new URLSearchParams();
@@ -44,20 +54,42 @@
     name: "Reef Berlin Guestbook",
   }}
 />
-{#if data.query}
-  <h1 class="mb-4 text-sm text-muted">
-    {data.events.length} result{data.events.length === 1 ? "" : "s"} for
-    <span class="text-ink">“{data.query}”</span>
-    · <a href="/" class="text-link hover:underline">clear</a>
-  </h1>
-{/if}
-
 <svelte:window
   onclick={() => (open = false)}
   onkeydown={(e) => e.key === "Escape" && (open = false)}
 />
 
-<div class="relative mb-3">
+<CommunityHeader
+  bannerUrl={data.site.bannerUrl}
+  bannerX={data.site.bannerX}
+  bannerY={data.site.bannerY}
+/>
+
+<div
+  class="flex flex-col gap-3 min-[1000px]:grid min-[1000px]:grid-cols-[11rem_minmax(0,1fr)_19rem] min-[1000px]:items-start min-[1000px]:gap-6"
+>
+  <div class="order-1 min-[1000px]:col-start-1 min-[1000px]:row-start-1">
+    <SortNav items={MENU} active={data.sort} href={href} />
+  </div>
+
+  <!-- Contents on mobile so About sits above the feed and rules below it. -->
+  <aside
+    class="contents min-[1000px]:sticky min-[1000px]:top-18 min-[1000px]:col-start-3 min-[1000px]:row-start-1 min-[1000px]:flex min-[1000px]:max-h-[calc(100vh-5.5rem)] min-[1000px]:flex-col min-[1000px]:gap-3 min-[1000px]:overflow-y-auto"
+  >
+    <div class="order-2"><AboutPanel site={data.site} stats={data.stats} /></div>
+    <div class="order-3"><RulesCard rules={data.site.rules} /></div>
+  </aside>
+
+  <div class="order-4 min-w-0 min-[1000px]:col-start-2 min-[1000px]:row-start-1">
+{#if data.query}
+  <h2 class="mb-4 text-sm text-muted">
+    {data.events.length} result{data.events.length === 1 ? "" : "s"} for
+    <span class="text-ink">“{data.query}”</span>
+    · <a href="/" class="text-link hover:underline">clear</a>
+  </h2>
+{/if}
+
+<!-- <div class="relative mb-3">
   <button
     type="button"
     aria-expanded={open}
@@ -104,7 +136,7 @@
       {/each}
     </ul>
   {/if}
-</div>
+</div> -->
 
 <div class="flex flex-col gap-3">
   {#each data.events as event, index (event.id)}
@@ -118,4 +150,6 @@
   {:else}
     <p class="card p-6 text-center text-muted">No events found.</p>
   {/each}
+</div>
+  </div>
 </div>

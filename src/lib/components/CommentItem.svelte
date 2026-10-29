@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Avatar from '#lib/components/Avatar.svelte';
 	import type { CommentView } from '#lib/server/comments.ts';
 	import { timeAgo } from '#lib/shared.ts';
 	import { page } from '$app/state';
@@ -30,10 +31,7 @@
 
 <div id="comment-{comment.id}" class="flex gap-2">
 	<div class="flex w-8 shrink-0 flex-col items-center">
-		<span
-			class="flex size-8 items-center justify-center rounded-full bg-card-hover text-lg"
-			aria-hidden="true">{comment.icon}</span
-		>
+		<Avatar icon={comment.icon} />
 		{#if !collapsed}
 			<button
 				type="button"

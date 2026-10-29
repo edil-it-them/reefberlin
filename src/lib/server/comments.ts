@@ -1,4 +1,4 @@
-import { asc, desc, eq, and, isNull } from 'drizzle-orm';
+import { asc, desc, eq, and, isNull, sql } from 'drizzle-orm';
 import { LIMITS, NICKNAME_PATTERN } from '#lib/shared.ts';
 import { hashSecret, verifySecret } from './auth';
 import { db } from './db';
@@ -123,4 +123,21 @@ export async function updateCommentBody(id: number, body: string) {
 /** Replies are removed with their parent (ON DELETE CASCADE). */
 export async function deleteComment(id: number) {
 	await db.delete(comments).where(eq(comments.id, id));
+}
+
+export const listNicknames = () =>
+	db
+		.select({
+			id: nicknames.id,
+			name: nicknames.name,
+			icon: nicknames.icon,
+			createdAt: nicknames.createdAt,
+			commentCount: sql<number>`(select count(*) from comments c where c.nickname_id = nicknames.id)`
+		})
+		.from(nicknames)
+		.orderBy(desc(nicknames.createdAt), desc(nicknames.id));
+
+/** Removes the nickname and, via ON DELETE CASCADE, all of its comments and replies. The name becomes free to claim again. */
+export async function deleteNickname(id: number) {
+	await db.delete(nicknames).where(eq(nicknames.id, id));
 }

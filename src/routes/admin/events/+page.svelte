@@ -35,10 +35,10 @@
 
 {#snippet fields(event?: (typeof data.events)[number])}
 	<input name="name" required placeholder="Event name" aria-label="Event name" value={event?.name ?? ''} class="field" />
-	<input name="artists" required placeholder="Artists (comma separated)" aria-label="Artists" value={event?.artists ?? ''} class="field" />
+	<input name="artists" placeholder="Artists (comma separated)" aria-label="Artists" value={event?.artists ?? ''} class="field" />
 	<div class="grid grid-cols-2 gap-2">
-		<input name="date" type="date" use:closePickerOnPick required aria-label="Date" value={event?.date ?? ''} class="field" />
-		<input name="venue" required placeholder="Venue" aria-label="Venue" value={event?.venue ?? ''} class="field" />
+		<input name="date" type="date" use:closePickerOnPick aria-label="Date" value={event?.date ?? ''} class="field" />
+		<input name="venue" placeholder="Venue" aria-label="Venue" value={event?.venue ?? ''} class="field" />
 	</div>
 	<textarea
 		name="description"
@@ -48,6 +48,21 @@
 		aria-label="Description"
 		class="field">{event?.description ?? ''}</textarea
 	>
+	<label class="flex items-start gap-2 text-sm">
+		<input name="pinned" type="checkbox" value="true" checked={event?.pinned ?? false} class="mt-1" />
+		<span>
+			Pin to top of the feed (text only, comments closed). Only one post can be pinned: pinning this one unpins the
+			other. Then only the name and description are used; artists, venue, date and poster are optional or ignored.
+		</span>
+	</label>
+	<label class="flex items-start gap-2 text-sm">
+		<input name="votingDisabled" type="checkbox" value="true" checked={event?.votingDisabled ?? false} class="mt-1" />
+		<span>Turn off voting on this post (hides the vote buttons; existing score is kept but stops changing).</span>
+	</label>
+	<label class="flex items-start gap-2 text-sm">
+		<input name="sharingDisabled" type="checkbox" value="true" checked={event?.sharingDisabled ?? false} class="mt-1" />
+		<span>Hide the Share button on this post.</span>
+	</label>
 	<div class="flex flex-col gap-2">
 		<label for="poster-{event?.id ?? 'new'}" class="text-sm font-medium">Event poster (optional)</label>
 		<input
@@ -59,7 +74,7 @@
 			class="field"
 		/>
 		<p id="poster-help-{event?.id ?? 'new'}" class="text-xs text-muted">
-			PNG or JPEG, up to 3 MB. Posters are automatically resized and optimized for the web.
+			Event posters only; ignored for the pinned post. PNG or JPEG, up to 3 MB. Posters are automatically resized and optimized for the web.
 		</p>
 		{#if event?.hasPoster}
 			<img
@@ -110,7 +125,12 @@
 					</div>
 				</form>
 			{:else}
-				<p class="font-medium">{event.name}</p>
+				<p class="font-medium">
+					{event.name}
+					{#if event.votingDisabled}<span class="ml-1 rounded-full bg-card-hover px-2 py-0.5 text-xs font-bold text-muted">No voting</span>{/if}
+					{#if event.sharingDisabled}<span class="ml-1 rounded-full bg-card-hover px-2 py-0.5 text-xs font-bold text-muted">No share</span>{/if}
+					{#if event.pinned}<span class="ml-1 rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-bold text-green-400">Pinned</span>{/if}
+				</p>
 				<p class="text-sm text-muted">{event.date} · {event.venue} · {event.artists}</p>
 				{#if event.description}<p class="mt-1 line-clamp-2 text-sm whitespace-pre-wrap">{event.description}</p>{/if}
 				{#if event.hasPoster}

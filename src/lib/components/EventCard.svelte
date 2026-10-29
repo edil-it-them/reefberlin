@@ -16,6 +16,9 @@
       posterHeight?: number | null;
       posterVersion?: string | null;
       score: number;
+      pinned?: boolean;
+      votingDisabled?: boolean;
+      sharingDisabled?: boolean;
     };
     commentCount?: number;
     linked?: boolean;
@@ -24,9 +27,12 @@
   let {
     event,
     commentCount,
-    linked = false,
+    linked: linkedProp = false,
     insideEventPage = false,
   }: Props = $props();
+  // The pinned post is text-only with closed comments, so the home feed shows it in full.
+  const pinned = $derived(event.pinned ?? false);
+  const linked = $derived(linkedProp && !pinned);
 
   const key = $derived(`vote:${event.slug}`);
   let scoreOverride = $state<number | null>(null);
@@ -105,9 +111,25 @@
     {/if}
     <img src={favicon} alt="" class="flex size-5" aria-hidden="true" />
     <p>
-      <span class="font-bold text-ink">r/reefberlin</span> · {formatDate(
-        event.date,
-      )} · {event.venue}
+      <span class="font-bold text-ink">r/reefberlin</span>
+      {#if pinned}
+        ·
+        <span class="inline-flex items-center gap-1 font-bold text-green-400">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+            ><path
+              d="M12.6 1.5 18.5 7.4l-1.4 1.4-1.2-.4-2.9 2.9.2 3.3-1.4 1.4-3.3-3.3-5 5-1-1 5-5-3.3-3.3 1.4-1.4 3.3.2 2.9-2.9-.4-1.2z"
+            /></svg
+          >
+          Pinned
+        </span>
+      {:else}
+        · {formatDate(event.date)} · {event.venue}
+      {/if}
     </p>
   </div>
   <h2 class="mt-2 text-lg leading-snug font-medium">
@@ -119,7 +141,9 @@
       {event.name}
     {/if}
   </h2>
-  <p class="mt-1 text-sm text-muted">🎧 {event.artists}</p>
+  {#if !pinned}
+    <p class="mt-1 text-sm text-muted">🎧 {event.artists}</p>
+  {/if}
   {#if event.description}
     <p
       class="mt-2 text-sm leading-relaxed break-words whitespace-pre-wrap {linked
@@ -129,7 +153,7 @@
       {event.description}
     </p>
   {/if}
-  {#if event.hasPoster}
+  {#if event.hasPoster && !pinned}
     <img
       src="/events/{event.slug}/poster?v={event.posterVersion}"
       alt="Poster for {event.name}"
@@ -144,6 +168,7 @@
   <div
     class="relative z-1 mt-3 flex flex-row flex-nowrap items-center gap-2 overflow-x-auto"
   >
+    {#if !event.votingDisabled}
     <span
       class="pill gap-0 {myVote === 1 ? 'bg-accent text-white' : ''} {myVote ===
       -1
@@ -194,8 +219,11 @@
         >
       </button>
     </span>
+    {/if}
 
-    {#if commentCount !== undefined}
+    {#if pinned}
+      <span class="px-1 text-xs text-muted">Comments closed</span>
+    {:else if commentCount !== undefined}
       <a
         href="/events/{event.slug}"
         class="pill px-3 hover:bg-line"
@@ -215,6 +243,7 @@
       </a>
     {/if}
 
+    {#if !event.sharingDisabled}
     <button type="button" class="pill px-3 hover:bg-line" onclick={share}>
       <svg
         width="16"
@@ -230,5 +259,6 @@
       >
       {copied ? "Link copied" : "Share"}
     </button>
+    {/if}
   </div>
 </article>

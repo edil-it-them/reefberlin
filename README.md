@@ -25,7 +25,7 @@ scripts/                   seed + admin password reset
 cp .env.example .env   # then set SESSION_SECRET (openssl rand -hex 32) and ADMIN_PASSWORD
 npm install
 npm run db:push        # create tables in local.db
-npm run db:seed        # sample events
+npm run db:seed        # test data: pinned post, events, users (codeword "testtest"), comments; local DB only
 npm run dev
 ```
 The `.env.example` Turnstile keys are Cloudflare's test keys (always pass).

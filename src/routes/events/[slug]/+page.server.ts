@@ -3,7 +3,7 @@ import { verifyCaptcha, PUBLIC_TURNSTILE_SITE_KEY } from '#lib/server/captcha.ts
 import { addComment, getThreads, validateCommentFields } from '#lib/server/comments.ts';
 import { EDGE_CACHE } from '#lib/server/cache.ts';
 import { getEventBySlug } from '#lib/server/events.ts';
-import { ICONS } from '#lib/shared.ts';
+import { AVATARS } from '#lib/shared.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, setHeaders, isDataRequest }) => {
@@ -29,11 +29,12 @@ export const actions: Actions = {
 
 		const event = await getEventBySlug(params.slug);
 		if (!event) error(404, 'Event not found');
+		if (event.pinned) return reject('Comments are closed on this post.');
 
 		if (parentId !== null && !Number.isInteger(parentId)) return reject('Invalid reply target.');
 		const invalid = validateCommentFields({ ...values, codeword: String(data.get('codeword') ?? '') });
 		if (invalid) return reject(invalid);
-		if (!(ICONS as readonly string[]).includes(values.icon)) return reject('Pick an icon.');
+		if (!(AVATARS as readonly string[]).includes(values.icon)) return reject('Pick an avatar.');
 
 		if (!(await verifyCaptcha(text('cf-turnstile-response'), getClientAddress()))) {
 			return reject('Captcha failed. Please try again.');

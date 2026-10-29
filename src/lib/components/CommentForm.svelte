@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import Turnstile from '#lib/components/Turnstile.svelte';
-	import { ICONS, LIMITS } from '#lib/shared.ts';
+	import Avatar from '#lib/components/Avatar.svelte';
+	import { AVATARS, LIMITS } from '#lib/shared.ts';
 
 	type Props = {
 		siteKey: string;
@@ -69,14 +70,23 @@
 		></textarea>
 
 		<div class="flex flex-wrap items-center gap-2 border-t border-line/60 px-3 py-2">
-			<select
-				name="icon"
-				aria-label="Icon"
-				class="h-8 rounded-full bg-field px-2 text-sm"
-				value={mine?.values?.icon ?? ICONS[0]}
-			>
-				{#each ICONS as icon (icon)}<option value={icon}>{icon}</option>{/each}
-			</select>
+			<fieldset class="flex w-full flex-wrap gap-1">
+				<legend class="sr-only">Avatar</legend>
+				{#each AVATARS as avatar (avatar)}
+					<label class="cursor-pointer rounded-full p-0.5 has-checked:ring-2 has-checked:ring-accent has-focus-visible:ring-2 has-focus-visible:ring-ink">
+						<input
+							type="radio"
+							name="icon"
+							value={avatar}
+							required
+							checked={avatar === (mine?.values?.icon ?? AVATARS[0])}
+							class="sr-only"
+							aria-label={avatar.replace('_', ' ')}
+						/>
+						<Avatar icon={avatar} size={32} />
+					</label>
+				{/each}
+			</fieldset>
 			<input
 				name="nickname"
 				required

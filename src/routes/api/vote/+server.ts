@@ -8,6 +8,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	const delta = Number(body?.delta);
 	if (!slug || !Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 2) error(400, 'Bad vote');
 	const score = await applyVote(slug, delta);
-	if (score === null) error(404, 'Event not found');
+	if (score === null) error(404, 'Event not found or voting is closed');
 	return json({ score });
 };

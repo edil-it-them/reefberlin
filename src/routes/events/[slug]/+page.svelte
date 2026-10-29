@@ -59,9 +59,15 @@
 
 <EventCard event={data.event} insideEventPage={true} />
 
-<section class="mt-3" aria-label="Leave a comment">
-  <CommentForm siteKey={data.siteKey} {form} />
-</section>
+{#if data.event.pinned}
+  <p class="mt-3 rounded-md bg-card-hover p-3 text-center text-sm text-muted">
+    Comments are closed on this post.
+  </p>
+{:else}
+  <section class="mt-3" aria-label="Leave a comment">
+    <CommentForm siteKey={data.siteKey} {form} />
+  </section>
+{/if}
 
 <hr class="my-4 border-line" />
 
@@ -75,13 +81,13 @@
       </div>
     {/if}
   {:else}
-    <div class="py-10 text-center">
+    {#if !data.event.pinned}<div class="py-10 text-center">
       <p class="text-base font-bold">
         Nobody's responded to this rave yet. Sign the guestbook!
       </p>
       <!-- <p class="mt-1 text-sm text-muted">
         Nobody's responded to this rave yet. Sign the guestbook!
       </p> -->
-    </div>
+    </div>{/if}
   {/each}
 </section>

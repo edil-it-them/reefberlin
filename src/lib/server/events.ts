@@ -1,11 +1,11 @@
-import { asc, desc, eq, like, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, like, ne, or, sql } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { slugify } from '#lib/shared.ts';
 import { db } from './db';
 import { comments, events } from './db/schema';
 import type { EventPoster } from './posters';
 
-export type EventInput = { name: string; artists: string; date: string; venue: string; description: string };
+export type EventInput = { name: string; artists: string; date: string; venue: string; description: string; pinned?: boolean; votingDisabled?: boolean; sharingDisabled?: boolean };
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
 
@@ -32,13 +32,18 @@ export async function listEvents(query = '', sort: Sort = 'date') {
 			// Cache-busting token: changes whenever the poster bytes change.
 			posterVersion: sql<string | null>`case when ${events.poster} is null then null else length(${events.poster}) || hex(substr(${events.poster}, -8)) end`,
 			score: events.score,
+			pinned: events.pinned,
+			votingDisabled: events.votingDisabled,
+			sharingDisabled: events.sharingDisabled,
 			// Columns are written out because Drizzle drops table prefixes in single-table selects,
 			// which would make `id` resolve to comments.id inside the subquery.
 			commentCount: sql<number>`(select count(*) from comments c where c.event_id = events.id)`
 		})
 		.from(events)
 		.where(q ? or(match(events.name), match(events.artists), match(events.venue)) : undefined)
+		// The pinned post always comes first and is never ranked against the others.
 		.orderBy(
+			desc(events.pinned),
 			...(sort === 'rating'
 				? [desc(events.score), desc(events.date)]
 				: sort === 'comments'
@@ -56,7 +61,7 @@ export async function applyVote(slug: string, delta: number) {
 	const [row] = await db
 		.update(events)
 		.set({ score: sql`${events.score} + ${d}` })
-		.where(eq(events.slug, slug))
+		.where(and(eq(events.slug, slug), eq(events.votingDisabled, false)))
 		.returning({ score: events.score });
 	return row?.score ?? null;
 }
@@ -76,7 +81,10 @@ export const getEventBySlug = (slug: string) =>
 			hasPoster: sql<boolean>`${events.poster} is not null`,
 			// Cache-busting token: changes whenever the poster bytes change.
 			posterVersion: sql<string | null>`case when ${events.poster} is null then null else length(${events.poster}) || hex(substr(${events.poster}, -8)) end`,
-			score: events.score
+			score: events.score,
+			pinned: events.pinned,
+			votingDisabled: events.votingDisabled,
+			sharingDisabled: events.sharingDisabled
 		})
 		.from(events)
 		.where(eq(events.slug, slug))
@@ -99,13 +107,19 @@ export const listEventsForAdmin = () =>
 			posterHeight: events.posterHeight,
 			hasPoster: sql<boolean>`${events.poster} is not null`,
 			// Cache-busting token: changes whenever the poster bytes change.
-			posterVersion: sql<string | null>`case when ${events.poster} is null then null else length(${events.poster}) || hex(substr(${events.poster}, -8)) end`
+			posterVersion: sql<string | null>`case when ${events.poster} is null then null else length(${events.poster}) || hex(substr(${events.poster}, -8)) end`,
+			pinned: events.pinned,
+			votingDisabled: events.votingDisabled,
+			sharingDisabled: events.sharingDisabled
 		})
 		.from(events)
-		.orderBy(asc(events.name));
+		.orderBy(desc(events.pinned), asc(events.name));
 
-async function uniqueSlug(name: string, ignoreId?: number): Promise<string> {
-	const base = slugify(name) || 'event';
+/** Event slugs are name + date (reef-night-2026-03-14); the pinned post has no date. */
+export const eventSlugBase = (name: string, date: string, pinned = false) =>
+	[slugify(name) || 'event', pinned ? '' : date].filter(Boolean).join('-');
+
+async function uniqueSlug(base: string, ignoreId?: number): Promise<string> {
 	for (let i = 0; ; i++) {
 		const slug = i === 0 ? base : `${base}-${i + 1}`;
 		const existing = await db.query.events.findFirst({ where: like(events.slug, slug) });
@@ -113,12 +127,17 @@ async function uniqueSlug(name: string, ignoreId?: number): Promise<string> {
 	}
 }
 
+/** Only one post can be pinned at a time. */
+const unpinOthers = (keepId?: number) =>
+	db.update(events).set({ pinned: false }).where(keepId === undefined ? undefined : ne(events.id, keepId));
+
 export async function createEvent(input: EventInput, poster: EventPoster | null) {
+	if (input.pinned) await unpinOthers();
 	await db
 		.insert(events)
 		.values({
 			...input,
-			slug: await uniqueSlug(input.name),
+			slug: await uniqueSlug(eventSlugBase(input.name, input.date, input.pinned)),
 			...(poster
 				? { poster: poster.data, posterWidth: poster.width, posterHeight: poster.height }
 				: {})
@@ -127,6 +146,7 @@ export async function createEvent(input: EventInput, poster: EventPoster | null)
 
 /** Slug is kept stable on edit so shared links don't break. */
 export async function updateEvent(id: number, input: EventInput, poster?: EventPoster | null) {
+	if (input.pinned) await unpinOthers(id);
 	await db
 		.update(events)
 		.set({
